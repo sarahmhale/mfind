@@ -49,7 +49,6 @@ char * dequeue()
         struct node *temp;
         temp = front;
         front = front->next;
-        printf("\n\n%s deleted", temp->data);
         char * start = temp->data;
         free(temp);
         return start;
