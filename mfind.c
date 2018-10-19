@@ -41,8 +41,9 @@ void open_directory(int nr_reads){
                 printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
             }else{
                 char * new_path = concat_path(path,p_dirent->d_name);
-
+                
                 if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
+                    printf("%s\n",p_dirent->d_name );
                     check_file_type(new_path);
                 }
             }
@@ -118,5 +119,4 @@ int main(int argc, char *argv[]){
     read_input_args(argc, argv,t_flag,p_flag);
     traverse_files();
     create_threads(nrthr);
-
 }
