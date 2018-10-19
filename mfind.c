@@ -3,12 +3,6 @@
 
 char * name;
 
-void enqueue_startfolders(int size, char * buf[size]){
-    for(int i = 0; i < size; i++){
-        enqueue(buf[i]);
-    }
-}
-
 char * concat_path(char * path, char * current_file){
     char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file));
     strcpy(str3, path);
@@ -27,8 +21,6 @@ void check_file_type(char * path){
         }
     }
 }
-
-
 
 void open_directory(){
     struct dirent *p_dirent;
@@ -64,26 +56,61 @@ void * traverse_files(){
 }
 
 
-void read_input_args(int argc , char **argv){
-    for(int i = 1; i < argc-1; i++){
-        enqueue( argv[i]);
+void read_input_args(int argc , char **argv,int t_flag, int p_flag){
+    if( t_flag == 1 && p_flag == 1){
+        printf("both flags");
+        for(int i = 5; i < argc-1; i++){
+            printf("\nargv[%d]: %s",i,argv[i]); 
+
+            enqueue( argv[i]);
+        }
+    }else if((t_flag == 1 && p_flag == 0)|| (t_flag == 0 && p_flag == 1)){
+        printf("one flags");
+        for(int i = 3; i < argc-1; i++){
+            enqueue( argv[i]);
+        }
+    }else{
+        for(int i = 1; i < argc-1; i++){
+            enqueue( argv[i]);
+        }
     }
+
+    display();
     name = argv[argc-1];
 }
+
 
 int main(int argc, char *argv[]){
     int nr_of_threads = 2;
     name = "file.txt";
+    int t_flag = 0;
+    int p_flag = 0;
+    char * type = 0;
+    int nrthr = 0;
+    char * cvalue = NULL;
+    int c;
 
-    read_input_args(argc, argv);
-    // char * buf[2] = {"test/", "test/"};
+    while ((c = getopt (argc, argv, "t:p:")) != -1){
+        switch (c){
+            case 't':
+                t_flag = 1;
+                type = optarg;
+                break;
+            case 'p':
+                p_flag = 1;
+                nrthr = atoi(optarg);
+                break;
+            default:
+                break;
+        }
+    }
+    read_input_args(argc, argv,t_flag,p_flag);
 
-    // enqueue_startfolders(2,buf);
 
 
     // pthread_t threads[nr_of_threads];
 
-    // traverse_files();
+    //traverse_files();
     // for(int i = 0; i < nr_of_threads-1; i++){
     //     if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
     //         perror("");
