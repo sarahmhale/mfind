@@ -64,19 +64,26 @@ void * traverse_files(){
 }
 
 
+void read_input_args(int argc , char **argv){
+    for(int i = 1; i < argc; i++){
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
+}
+
 int main(int argc, char *argv[]){
     int nr_of_threads = 2;
     name = "file.txt";
 
-   
-    char * buf[2] = {"test/"};
+    read_input_args(argc, argv);
+    // char * buf[2] = {"test/", "test/"};
 
-    enqueue_startfolders(1,buf);
+    // enqueue_startfolders(2,buf);
 
 
-    pthread_t threads[nr_of_threads];
+    // pthread_t threads[nr_of_threads];
 
-    traverse_files();
+    // traverse_files();
     // for(int i = 0; i < nr_of_threads-1; i++){
     //     if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
     //         perror("");
