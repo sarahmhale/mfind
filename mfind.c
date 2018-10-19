@@ -65,10 +65,10 @@ void * traverse_files(){
 
 
 void read_input_args(int argc , char **argv){
-    for(int i = 1; i < argc; i++){
-        printf("argv[%d]: %s\n", i, argv[i]);
+    for(int i = 1; i < argc-1; i++){
+        enqueue( argv[i]);
     }
-
+    name = argv[argc-1];
 }
 
 int main(int argc, char *argv[]){
