@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* this implematation is taken from
  * http://www.cprogrammingnotes.com/question/dynamic-queue.html,
@@ -15,3 +16,4 @@ typedef struct node
 void display();
 node * enqueue(char *);
 char * dequeue();
+bool is_empty();

@@ -61,7 +61,11 @@ void open_directory(){
 }
 
 void * traverse_files(){
-   open_directory();
+    if(is_empty()== true){
+        printf("queueu is empty\n ");
+    }
+    //printf("queueu has items\n ");
+   //open_directory();
    return NULL;
 }
 

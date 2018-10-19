@@ -25,6 +25,13 @@ node * enqueue(char * item)
     return front;
 }
 
+bool is_empty(){
+    if( front == NULL){
+        return true;
+    }
+    return false;
+}
+
 void display()
 {
     struct node *temp;
