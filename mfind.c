@@ -2,6 +2,7 @@
 #include "queue.h"
 
 char * name;
+pthread_mutex_t mtx;
 
 char * concat_path(char * path, char * current_file){
     char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file));
@@ -12,7 +13,7 @@ char * concat_path(char * path, char * current_file){
 
 void check_file_type(char * path){
     struct stat file_info;
-    printf("path in check file type %s\n", path);
+
     if(lstat(path, &file_info)==-1){
         perror("");
     }else{ 
@@ -25,8 +26,12 @@ void check_file_type(char * path){
 void open_directory(){
     struct dirent *p_dirent;
     DIR *p_dir;
+    
+    pthread_mutex_lock(&mtx);
     char * path = dequeue();
     printf("path %s\n", path);
+    pthread_mutex_unlock(&mtx);
+
     p_dir = opendir (path);
     printf("path %s\n", path);
     if (p_dir == NULL) {
@@ -72,7 +77,24 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 }
 
 
+void create_threads(int nrthr){
+    pthread_t threads[nrthr];
+    
+    for(int i = 0; i < nrthr-1; i++){
+        printf("inheheheh");
+        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
+            perror("");
+        }
+    }
+
+    for(int i = 0; i < nrthr-1; i++){
+        pthread_join(threads[i],NULL);
+    }
+}
+
+
 int main(int argc, char *argv[]){
+    pthread_mutex_init(&mtx, NULL);
     int nr_of_threads = 2;
     int t_flag = 0;
     int p_flag = 0;
@@ -96,22 +118,7 @@ int main(int argc, char *argv[]){
         }
     }
     read_input_args(argc, argv,t_flag,p_flag);
-
-
-
-    pthread_t threads[nrthr];
-    printf("%d", nrthr);
-
     //traverse_files();
-    for(int i = 0; i < nrthr-1; i++){
-        printf("inheheheh");
-        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
-            perror("");
-        }
-    }
-
-    for(int i = 0; i < nr_of_threads-1; i++){
-        pthread_join(threads[i],NULL);
-    }
+    create_threads(nrthr);
 
 }
