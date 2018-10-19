@@ -43,7 +43,8 @@ void open_directory(int nr_reads){
                 char * new_path = concat_path(path,p_dirent->d_name);
                 
                 if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
-                    printf("%s\n",p_dirent->d_name );
+                    char * new_path = concat_path(path,p_dirent->d_name);
+                    printf("%s\n",new_path);
                     check_file_type(new_path);
                 }
             }
