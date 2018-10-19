@@ -43,7 +43,7 @@ void check_file_type(char * path){
     }
 }
 
-void * traverse_files(){
+void open_directory(){
     struct dirent *p_dirent;
     DIR *p_dir;
     char * path = dequeue();
@@ -58,7 +58,11 @@ void * traverse_files(){
         }
         closedir (p_dir);
     } 
-    return NULL;
+}
+
+void * traverse_files(){
+   open_directory();
+   return NULL;
 }
 
 
