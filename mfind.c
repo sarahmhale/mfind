@@ -15,29 +15,38 @@ void enqueue_startfolders(int size, char * buf[size]){
 }
 
 char * concat_path(char * path, char * current_file){
-    char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file) );
+    char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file));
     strcpy(str3, path);
     strcat(str3, current_file);
     return str3;
 }
 
 char * get_directory(char * path){
+    printf("%s\n", path);
     char *last = strrchr(path, '/');
-    if (last != NULL) {
+    
+    if (last != NULL || last+1 != '\0' ) {     
+        printf("inhehehehh %s\n", last+1);
         return last+1;
     }
-    return NULL;
+    return path;
 }
 
 void check_file_type(char * path){
     struct stat file_info;
+    printf("path in check file type %s\n", path);
     if(lstat(path, &file_info)==-1){
         perror("");
     }else{ 
-        if(S_ISDIR(file_info.st_mode)){
+        if(S_ISLNK(file_info.st_mode)){
+            printf("link %s\n", path);
+        }
+        if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             printf("directory %s\n", path);
-            enqueue(path);
+            printf("enqueue\n");
+            enqueue(concat_path(path, "/"));
         }else if(S_ISREG(file_info.st_mode)){
+            printf("file\n");
             //TODO: check if they are the same
         }
     }
@@ -47,25 +56,31 @@ void open_directory(){
     struct dirent *p_dirent;
     DIR *p_dir;
     char * path = dequeue();
+    printf("path %s\n", path);
     p_dir = opendir (path);
-
+    printf("path %s\n", path);
     if (p_dir == NULL) {
         printf("could not open dir");   
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
             char * new_path = concat_path(path,p_dirent->d_name);
-            check_file_type(new_path);
+
+            if(!strcmp(p_dirent->d_name, ".") || !strcmp(p_dirent->d_name, "..")){
+                printf("Dots\n");
+            }else{
+                check_file_type(new_path);
+            }
         }
         closedir (p_dir);
     } 
 }
 
 void * traverse_files(){
-    if(is_empty()== true){
-        printf("queueu is empty\n ");
+    while(!is_empty()){
+        open_directory();
     }
-    //printf("queueu has items\n ");
-   //open_directory();
+
+   
    return NULL;
 }
 
@@ -75,8 +90,9 @@ int main(int argc, char *argv[]){
 
    
     char * buf[2] = {"test/"};
+    printf("hello\n");
+    enqueue_startfolders(1,buf);
 
-    enqueue_startfolders(2,buf);
 
     pthread_t threads[nr_of_threads];
 

@@ -8,20 +8,24 @@ struct node *front = NULL;
 struct node *rear = NULL;
 
 node * enqueue(char * item)
-{
+{   
     struct node *nptr = malloc(sizeof(node));
-    nptr->data = item;
+    nptr->data = malloc(strlen(item)+1);
+    strcpy(nptr->data, item);
     nptr->next = NULL;
-    if (rear == NULL)
+    if (rear == NULL || front == NULL) 
     {
         front = nptr;
         rear = nptr;
+
     }
     else
     {
         rear->next = nptr;
         rear = rear->next;
     }
+
+
     return front;
 }
 
@@ -48,7 +52,7 @@ char * dequeue()
 {
     if (front == NULL)
     {
-        printf("\n\nqueue is empty \n");
+        printf("\n\nqueue is emptysssss \n");
         return NULL;
     }
     else
