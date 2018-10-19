@@ -23,25 +23,22 @@ void check_file_type(char * path){
     }
 }
 
-void open_directory(){
+void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
-    
+
     pthread_mutex_lock(&mtx);
     char * path = dequeue();
-    printf("path %s\n", path);
     pthread_mutex_unlock(&mtx);
 
     p_dir = opendir (path);
-    printf("path %s\n", path);
+
     if (p_dir == NULL) {
         printf("could not open dir");   
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
-            printf("%s: \n" , p_dirent->d_name);
-            printf("%s: \n" , name);
             if(!strcmp(p_dirent->d_name, name)){
-                printf("is goal\n");
+                printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
             }else{
                 char * new_path = concat_path(path,p_dirent->d_name);
 
@@ -55,8 +52,10 @@ void open_directory(){
 }
 
 void * traverse_files(){
+    int nr_reads = 0;
     while(!is_empty()){
-        open_directory();
+        nr_reads++;
+        open_directory(nr_reads);
     }
    return NULL;
 }
@@ -81,7 +80,6 @@ void create_threads(int nrthr){
     pthread_t threads[nrthr];
     
     for(int i = 0; i < nrthr-1; i++){
-        printf("inheheheh");
         if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
             perror("");
         }
