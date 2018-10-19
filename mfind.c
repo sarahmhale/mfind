@@ -1,12 +1,7 @@
 #include "mfind.h"
 #include "queue.h"
 
-
-
-void * print_hello(){
-    printf("hello world\n");
-    return NULL;
-}
+char * name;
 
 void enqueue_startfolders(int size, char * buf[size]){
     for(int i = 0; i < size; i++){
@@ -29,11 +24,11 @@ void check_file_type(char * path){
     }else{ 
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             enqueue(concat_path(path, "/"));
-        }else if(S_ISREG(file_info.st_mode)){
-            //TODO: check if they are the same
         }
     }
 }
+
+
 
 void open_directory(){
     struct dirent *p_dirent;
@@ -46,12 +41,15 @@ void open_directory(){
         printf("could not open dir");   
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
-            char * new_path = concat_path(path,p_dirent->d_name);
 
-            if(!strcmp(p_dirent->d_name, ".") || !strcmp(p_dirent->d_name, "..")){
-                printf("Dots\n");
+            if(!strcmp(p_dirent->d_name, name)){
+                printf("is goal\n");
             }else{
-                check_file_type(new_path);
+                char * new_path = concat_path(path,p_dirent->d_name);
+
+                if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
+                    check_file_type(new_path);
+                }
             }
         }
         closedir (p_dir);
@@ -62,18 +60,17 @@ void * traverse_files(){
     while(!is_empty()){
         open_directory();
     }
-
-   
    return NULL;
 }
 
 
 int main(int argc, char *argv[]){
     int nr_of_threads = 2;
+    name = "file.txt";
 
    
     char * buf[2] = {"test/"};
-    printf("hello\n");
+
     enqueue_startfolders(1,buf);
 
 
