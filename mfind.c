@@ -57,25 +57,15 @@ void * traverse_files(){
 
 
 void read_input_args(int argc , char **argv,int t_flag, int p_flag){
+    int start_index = 1;
     if( t_flag == 1 && p_flag == 1){
-        printf("both flags");
-        for(int i = 5; i < argc-1; i++){
-            printf("\nargv[%d]: %s",i,argv[i]); 
-
-            enqueue( argv[i]);
-        }
+        start_index = 5;
     }else if((t_flag == 1 && p_flag == 0)|| (t_flag == 0 && p_flag == 1)){
-        printf("one flags");
-        for(int i = 3; i < argc-1; i++){
-            enqueue( argv[i]);
-        }
-    }else{
-        for(int i = 1; i < argc-1; i++){
-            enqueue( argv[i]);
-        }
+        start_index = 3; 
     }
-
-    display();
+    for(int i = start_index; i < argc-1; i++){
+        enqueue( argv[i]);
+    }
     name = argv[argc-1];
 }
 
