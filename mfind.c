@@ -33,7 +33,8 @@ void open_directory(){
         printf("could not open dir");   
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
-
+            printf("%s: \n" , p_dirent->d_name);
+            printf("%s: \n" , name);
             if(!strcmp(p_dirent->d_name, name)){
                 printf("is goal\n");
             }else{
@@ -63,6 +64,7 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     }else if((t_flag == 1 && p_flag == 0)|| (t_flag == 0 && p_flag == 1)){
         start_index = 3; 
     }
+
     for(int i = start_index; i < argc-1; i++){
         enqueue( argv[i]);
     }
@@ -72,7 +74,6 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 
 int main(int argc, char *argv[]){
     int nr_of_threads = 2;
-    name = "file.txt";
     int t_flag = 0;
     int p_flag = 0;
     char * type = 0;
@@ -98,17 +99,19 @@ int main(int argc, char *argv[]){
 
 
 
-    // pthread_t threads[nr_of_threads];
+    pthread_t threads[nrthr];
+    printf("%d", nrthr);
 
     //traverse_files();
-    // for(int i = 0; i < nr_of_threads-1; i++){
-    //     if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
-    //         perror("");
-    //     }
-   // }
+    for(int i = 0; i < nrthr-1; i++){
+        printf("inheheheh");
+        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
+            perror("");
+        }
+    }
 
-    // for(int i = 0; i < nr_of_threads-1; i++){
-    //     pthread_join(threads[i],NULL);
-    // }
+    for(int i = 0; i < nr_of_threads-1; i++){
+        pthread_join(threads[i],NULL);
+    }
 
 }
