@@ -21,32 +21,15 @@ char * concat_path(char * path, char * current_file){
     return str3;
 }
 
-char * get_directory(char * path){
-    printf("%s\n", path);
-    char *last = strrchr(path, '/');
-    
-    if (last != NULL || last+1 != '\0' ) {     
-        printf("inhehehehh %s\n", last+1);
-        return last+1;
-    }
-    return path;
-}
-
 void check_file_type(char * path){
     struct stat file_info;
     printf("path in check file type %s\n", path);
     if(lstat(path, &file_info)==-1){
         perror("");
     }else{ 
-        if(S_ISLNK(file_info.st_mode)){
-            printf("link %s\n", path);
-        }
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
-            printf("directory %s\n", path);
-            printf("enqueue\n");
             enqueue(concat_path(path, "/"));
         }else if(S_ISREG(file_info.st_mode)){
-            printf("file\n");
             //TODO: check if they are the same
         }
     }
