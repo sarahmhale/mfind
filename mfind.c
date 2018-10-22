@@ -57,6 +57,7 @@ void open_directory(int nr_reads){
         }
         closedir (p_dir);
     } 
+    free(path);
 }
 
 void * traverse_files(){
