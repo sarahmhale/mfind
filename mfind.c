@@ -72,6 +72,7 @@ void * traverse_files(){
     while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
         if(is_empty() == true){
             NUMTHREADS_EXECUTING--;
+            printf("waiting: %d", NUMTHREADS_EXECUTING);
             if(NUMTHREADS_EXECUTING == 0){
                 pthread_exit(NULL);
             }
