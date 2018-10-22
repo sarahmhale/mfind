@@ -72,6 +72,9 @@ void * traverse_files(){
     while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
         pthread_mutex_lock( &lock);
         if(is_empty() == true){
+            if(NUMTHREADS_EXECUTING <= 1){
+                pthread_exit(NULL);
+            }
             printf("waiting: \n");
             pthread_cond_wait(&cond, &lock);
         }
