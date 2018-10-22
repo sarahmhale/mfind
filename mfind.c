@@ -40,10 +40,12 @@ void open_directory(int nr_reads){
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
             char * new_path = concat_path(path,p_dirent->d_name);
+            printf("before free: %s\n", new_path);
             free(path);
+            printf("after free %s\n", new_path);
            
             if(!strcmp(p_dirent->d_name, name)){
-                printf("%s\n",new_path);
+                printf("after ffree: %s\n",new_path);
             }else{
                 
                 
