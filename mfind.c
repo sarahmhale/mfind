@@ -15,15 +15,14 @@ void check_file_type(char * path){
     struct stat file_info;
 
     if(lstat(path, &file_info)==-1){
-         //free(path);
         fprintf(stderr,"no such %s : ", path);
         perror("");
     }else{ 
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             enqueue(concat_path(path, "/"));
         }
-        free(path);
     }
+    free(path);
 }
 
 void open_directory(int nr_reads){
@@ -51,7 +50,7 @@ void open_directory(int nr_reads){
                     check_file_type(new_path);
                 }
             }
-           
+          
         }
         closedir (p_dir);
     } 
