@@ -79,9 +79,8 @@ void * traverse_files(){
         open_directory(nr_reads);
         NUMTHREADS_EXECUTING--;
         pthread_cond_signal(&cond);
-     
-   
     }
+    pthread_cond_signal(&cond);
     pthread_mutex_unlock( &lock);
     
 
