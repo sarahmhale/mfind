@@ -34,9 +34,9 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-    //pthread_mutex_lock(&queue_mutex);
+    pthread_mutex_lock(&queue_mutex);
     char * path = dequeue();
-    //pthread_mutex_unlock(&queue_mutex);
+    pthread_mutex_unlock(&queue_mutex);
 
     p_dir = opendir (path);
 
@@ -69,20 +69,21 @@ void * traverse_files(){
     int nr_reads = 0;
     printf("Running: %d\n",(unsigned int)pthread_self() );
 
+    //should NUMTHREADS_EXECUTING > 0 || !is_empty()
     while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
         printf("NUMTHREADS %d: ", NUMTHREADS_EXECUTING);
-        pthread_mutex_lock( &lock);
+        //pthread_mutex_lock( &lock);
         if(is_empty() == true){
             printf("Waiting on condition variable cond1\n"); 
-            pthread_cond_wait(&cond, &lock); 
+           // pthread_cond_wait(&cond, &lock); 
 
         }else{
             nr_reads++;
             printf("Running: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
             open_directory(nr_reads);
-            pthread_cond_signal(&cond); 
+           // pthread_cond_signal(&cond); 
         }
-        pthread_mutex_unlock( &lock);
+       // pthread_mutex_unlock( &lock);
     }
     
 
