@@ -70,8 +70,11 @@ void * traverse_files(){
 
     pthread_mutex_lock( &lock);
     while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
-        if(is_empty()== true){
+        if(is_empty() == true){
             NUMTHREADS_EXECUTING--;
+            if(NUMTHREADS_EXECUTING == 0){
+                pthread_exit(NULL);
+            }
             pthread_cond_wait(&cond, &lock);
         }
         nr_reads++;
@@ -80,7 +83,7 @@ void * traverse_files(){
         NUMTHREADS_EXECUTING--;
         pthread_cond_signal(&cond);
     }
-    pthread_cond_signal(&cond);
+
     pthread_mutex_unlock( &lock);
     
 
