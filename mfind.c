@@ -47,7 +47,6 @@ void open_directory(int nr_reads){
             char * new_path = concat_path(path,p_dirent->d_name);
             
             if(!strcmp(p_dirent->d_name, NAME)){
-                pthread_cond_signal(&cond); 
                 printf("%s\n",new_path);
                 free(new_path);
                 
@@ -62,7 +61,7 @@ void open_directory(int nr_reads){
         }
         closedir (p_dir);
     } 
-    pthread_cond_signal( &cond );
+    
     free(path);
 }
 
@@ -79,6 +78,7 @@ void * traverse_files(){
             nr_reads++;
             NUMTHREADS_EXECUTING++;
             open_directory(nr_reads);
+            pthread_cond_signal(&cond);
           
         }
         NUMTHREADS_EXECUTING--;
