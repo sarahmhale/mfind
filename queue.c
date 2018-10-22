@@ -52,7 +52,6 @@ char * dequeue()
 {
     if (front == NULL)
     {
-        printf("\n\nqueue is emptysssss \n");
         return NULL;
     }
     else
