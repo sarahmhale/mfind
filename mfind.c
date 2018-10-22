@@ -150,6 +150,6 @@ int main(int argc, char *argv[]){
         }
     }
     read_input_args(argc, argv,t_flag,p_flag);
-    traverse_files();
     create_threads(nrthr);
+    traverse_files();
 }
