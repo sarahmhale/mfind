@@ -70,6 +70,7 @@ void * traverse_files(){
     printf("Running: %d\n",(unsigned int)pthread_self() );
 
     while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
+        printf("NUMTHREADS %d: ", NUMTHREADS_EXECUTING);
         pthread_mutex_lock( &lock);
         if(is_empty() == true){
             printf("Waiting on condition variable cond1\n"); 
