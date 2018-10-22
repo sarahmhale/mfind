@@ -19,6 +19,7 @@ void check_file_type(char * path){
     }else{ 
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             enqueue(concat_path(path, "/"));
+            free(path);
           
         }
     }
