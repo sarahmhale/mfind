@@ -50,6 +50,8 @@ void open_directory(int nr_reads){
             }else{
                 if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
                     check_file_type(new_path);
+                }else{
+                    free(new_path);
                 }
             }
           
