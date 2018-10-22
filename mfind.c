@@ -67,11 +67,8 @@ void open_directory(int nr_reads){
 
 void * traverse_files(){
     int nr_reads = 0;
-    printf("Running: %d\n",(unsigned int)pthread_self() );
-
     //should NUMTHREADS_EXECUTING > 0 || !is_empty()
     while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
-        printf("NUMTHREADS %d: ", NUMTHREADS_EXECUTING);
         //pthread_mutex_lock( &lock);
         if(is_empty() == true){
             printf("Waiting on condition variable cond1\n"); 
