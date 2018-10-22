@@ -72,12 +72,12 @@ void * traverse_files(){
         pthread_mutex_lock( &lock);
         if(is_empty() == true){
             printf("Waiting on condition variable cond1\n"); 
-           // pthread_cond_wait(&cond, &lock); 
+            pthread_cond_wait(&cond, &lock); 
 
         }else{
             nr_reads++;
             open_directory(nr_reads);
-           // pthread_cond_signal(&cond); 
+            pthread_cond_signal(&cond); 
         }
         pthread_mutex_unlock( &lock);
     }
