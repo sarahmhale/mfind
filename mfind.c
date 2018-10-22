@@ -45,11 +45,12 @@ void open_directory(int nr_reads){
             if(!strcmp(p_dirent->d_name, name)){
                 printf("%s\n",new_path);
                 free(new_path);
-                //free(path);
-            }else{
                 
+            }else{
                 if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
                     check_file_type(new_path);
+                }else{
+                    free(new_path);
                 }
             }
         }
