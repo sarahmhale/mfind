@@ -1,8 +1,11 @@
 #include "mfind.h"
 #include "queue.h"
+int NUMTHREADS_EXECUTING;
+char * NAME;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t cond_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-char * name;
-pthread_mutex_t mtx;
 
 char * concat_path(char * path, char * current_file){
     char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file));
@@ -31,9 +34,9 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-    pthread_mutex_lock(&mtx);
+    //pthread_mutex_lock(&queue_mutex);
     char * path = dequeue();
-    pthread_mutex_unlock(&mtx);
+    //pthread_mutex_unlock(&queue_mutex);
 
     p_dir = opendir (path);
 
@@ -43,7 +46,7 @@ void open_directory(int nr_reads){
         while ((p_dirent = readdir(p_dir)) != NULL) {
             char * new_path = concat_path(path,p_dirent->d_name);
             
-            if(!strcmp(p_dirent->d_name, name)){
+            if(!strcmp(p_dirent->d_name, NAME)){
                 printf("%s\n",new_path);
                 free(new_path);
                 
@@ -58,15 +61,28 @@ void open_directory(int nr_reads){
         }
         closedir (p_dir);
     } 
+    pthread_cond_signal( &cond );
     free(path);
 }
 
 void * traverse_files(){
     int nr_reads = 0;
-    while(!is_empty()){
-        nr_reads++;
-        open_directory(nr_reads);
+    pthread_mutex_lock( &lock);
+    printf("print %d\n", NUMTHREADS_EXECUTING);
+    while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
+        if(is_empty() == true){
+            printf("Waiting on condition variable cond1\n"); 
+            pthread_cond_wait(&cond, &lock); 
+
+        }else{
+            nr_reads++;
+            open_directory(nr_reads);
+            pthread_cond_signal(&cond); 
+        }
+         
     }
+    pthread_mutex_unlock( &lock);
+
     printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
     return NULL;
 }
@@ -83,7 +99,7 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     for(int i = start_index; i < argc-1; i++){
         enqueue( argv[i]);
     }
-    name = argv[argc-1];
+    NAME = argv[argc-1];
 }
 
 
@@ -103,7 +119,8 @@ void create_threads(int nrthr){
 
 
 int main(int argc, char *argv[]){
-    pthread_mutex_init(&mtx, NULL);
+    pthread_mutex_init(&lock, NULL);
+    NUMTHREADS_EXECUTING = 1;
     int nr_of_threads = 2;
     int t_flag = 0;
     int p_flag = 0;
@@ -121,8 +138,10 @@ int main(int argc, char *argv[]){
             case 'p':
                 p_flag = 1;
                 nrthr = atoi(optarg);
+                NUMTHREADS_EXECUTING = nrthr;
                 break;
             default:
+               
                 break;
         }
     }
