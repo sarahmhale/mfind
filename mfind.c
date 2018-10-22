@@ -71,11 +71,6 @@ void * traverse_files(){
     pthread_mutex_lock( &lock);
     while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
         if(is_empty() == true){
-            NUMTHREADS_EXECUTING--;
-            printf("waiting: %d", NUMTHREADS_EXECUTING);
-            if(NUMTHREADS_EXECUTING == 0){
-                pthread_exit(NULL);
-            }
             pthread_cond_wait(&cond, &lock);
         }
         nr_reads++;
@@ -130,7 +125,6 @@ int main(int argc, char *argv[]){
             case 'p':
                 p_flag = 1;
                 nrthr = atoi(optarg);
-                NUMTHREADS_EXECUTING = nrthr;
                 break;
             default:
                
