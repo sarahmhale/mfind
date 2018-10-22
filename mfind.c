@@ -19,6 +19,7 @@ void check_file_type(char * path){
     }else{ 
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             enqueue(concat_path(path, "/"));
+          
         }
     }
 }
@@ -38,6 +39,7 @@ void open_directory(int nr_reads){
     }else{
         while ((p_dirent = readdir(p_dir)) != NULL) {
             char * new_path = concat_path(path,p_dirent->d_name);
+            free(path);
             if(!strcmp(p_dirent->d_name, name)){
                 printf("%s\n",new_path);
             }else{
@@ -60,7 +62,7 @@ void * traverse_files(){
         open_directory(nr_reads);
     }
     printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
-   return NULL;
+    return NULL;
 }
 
 
