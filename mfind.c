@@ -107,19 +107,6 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 }
 
 
-void create_threads(int nrthr){
-    pthread_t threads[nrthr];
-    
-    for(int i = 0; i < nrthr-1; i++){
-        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
-            perror("");
-        }
-    }
-
-    for(int i = 0; i < nrthr-1; i++){
-        pthread_join(threads[i],NULL);
-    }
-}
 
 
 int main(int argc, char *argv[]){
@@ -150,6 +137,16 @@ int main(int argc, char *argv[]){
         }
     }
     read_input_args(argc, argv,t_flag,p_flag);
-    create_threads(nrthr);
+    pthread_t threads[nrthr];
+    
+    for(int i = 0; i < nrthr-1; i++){
+        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
+            perror("");
+        }
+    }
     traverse_files();
+
+    for(int i = 0; i < nrthr-1; i++){
+        pthread_join(threads[i],NULL);
+    }
 }
