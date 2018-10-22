@@ -73,6 +73,7 @@ void * traverse_files(){
         pthread_mutex_lock( &lock);
         if(is_empty() == true){
             if(NUMTHREADS_EXECUTING <= 1){
+                printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
                 return NULL;
             }
             printf("waiting: \n");
