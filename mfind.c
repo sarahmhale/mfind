@@ -5,7 +5,7 @@ char * name;
 pthread_mutex_t mtx;
 
 char * concat_path(char * path, char * current_file){
-    char * str3 = (char *) malloc(1 + strlen(current_file));
+    char * str3 = (char *) malloc(1 + strlen(path)+ strlen(current_file));
     strcpy(str3, path);
     strcat(str3, current_file);
     return str3;
