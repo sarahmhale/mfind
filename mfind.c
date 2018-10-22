@@ -40,7 +40,6 @@ void open_directory(int nr_reads){
             char * new_path = concat_path(path,p_dirent->d_name);
             if(!strcmp(p_dirent->d_name, name)){
                 printf("%s\n",new_path);
-                printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
             }else{
                 
                 
@@ -60,6 +59,7 @@ void * traverse_files(){
         nr_reads++;
         open_directory(nr_reads);
     }
+    printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
    return NULL;
 }
 
