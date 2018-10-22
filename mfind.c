@@ -76,7 +76,6 @@ void * traverse_files(){
 
         }else{
             nr_reads++;
-            printf("Running: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
             open_directory(nr_reads);
            // pthread_cond_signal(&cond); 
         }
