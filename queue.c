@@ -61,6 +61,7 @@ char * dequeue()
         temp = front;
         front = front->next;
         char * start = temp->data;
+        free(temp->data);
         free(temp);
         return start;
     }
