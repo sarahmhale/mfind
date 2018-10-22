@@ -60,7 +60,6 @@ void open_directory(int nr_reads){
             }
           
         }
-        pthread_cond_signal(&cond); 
         closedir (p_dir);
     } 
     pthread_cond_signal( &cond );
@@ -70,7 +69,7 @@ void open_directory(int nr_reads){
 void * traverse_files(){
     int nr_reads = 0;
     //should NUMTHREADS_EXECUTING > 0 || !is_empty()
-    while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
+    while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
         pthread_mutex_lock( &lock);
         if(is_empty() == true){
             printf("Waiting on condition variable cond1\n"); 
@@ -78,9 +77,11 @@ void * traverse_files(){
 
         }else{
             nr_reads++;
+            NUMTHREADS_EXECUTING++;
             open_directory(nr_reads);
           
         }
+        NUMTHREADS_EXECUTING--;
         pthread_mutex_unlock( &lock);
     }
     
