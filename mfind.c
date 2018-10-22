@@ -34,9 +34,9 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-    pthread_mutex_lock(&queue_mutex);
+    pthread_mutex_lock(&lock);
     char * path = dequeue();
-    pthread_mutex_unlock(&queue_mutex);
+    pthread_mutex_unlock(&lock);
 
     p_dir = opendir (path);
 
