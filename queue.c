@@ -4,8 +4,10 @@
  * http://www.cprogrammingnotes.com/question/dynamic-queue.html,
  * small edits made by me.
  */
-struct node *front = NULL;
-struct node *rear = NULL;
+struct node *front;
+struct node *rear;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 
 node * enqueue(char * item)
 {   
@@ -13,6 +15,8 @@ node * enqueue(char * item)
     nptr->data = malloc(strlen(item)+1);
     strcpy(nptr->data, item);
     nptr->next = NULL;
+
+    pthread_mutex_lock(&lock);
     if (rear == NULL || front == NULL) 
     {
         front = nptr;
@@ -24,16 +28,19 @@ node * enqueue(char * item)
         rear->next = nptr;
         rear = rear->next;
     }
-
-
+    pthread_mutex_unlock(&lock);
     return front;
 }
 
 bool is_empty(){
+    pthread_mutex_lock(&lock);
     if( front == NULL){
+        pthread_mutex_unlock(&lock);
         return true;
     }
+    pthread_mutex_unlock(&lock);
     return false;
+    
 }
 
 void display()
@@ -50,18 +57,21 @@ void display()
 
 char * dequeue()
 {
+   
     if (front == NULL)
     {
         return NULL;
     }
     else
     {
+        pthread_mutex_lock(&lock);
         struct node *temp;
         temp = front;
         front = front->next;
         char * start = temp->data;
-        //free(temp->data);
         free(temp);
+        pthread_mutex_unlock(&lock);
         return start;
     }
+     
 }

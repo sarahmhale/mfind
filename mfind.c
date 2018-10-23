@@ -4,9 +4,10 @@ static int NUMTHREADS_WAITING;
 static char * NAME;
 static int NRTHR = 0;
 static char * type;
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+static bool RUNNING = true;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 
 char * concat_path(char * path, char * current_file){
@@ -28,12 +29,12 @@ void check_file_type(char * path){
             pthread_mutex_lock(&lock);
             enqueue(str);
             pthread_mutex_unlock(&lock);
-            free(str);
-            pthread_cond_broadcast(&cond);
+            free(str); 
         }
     }
     free(path);
 }
+
 
 void open_directory(int nr_reads){
     struct dirent *p_dirent;
@@ -42,12 +43,12 @@ void open_directory(int nr_reads){
     pthread_mutex_lock(&lock);
     char * path = dequeue();
     pthread_mutex_unlock(&lock);
-    if( path != NULL){
+
+    if(path != NULL){
         p_dir = opendir (path);
         if(p_dir == NULL){
-            perror("");
+            perror("path: ");
         }   
-
         if (p_dir == NULL) {
             printf("could not open dir");   
         }else{
@@ -65,20 +66,16 @@ void open_directory(int nr_reads){
                         free(new_path);
                     }
                 }
-            
             }
             closedir (p_dir);
         } 
-
-        pthread_cond_broadcast(&cond);
         free(path);
-    }
+    } 
 }
 
 void * traverse_files(){
     int nr_reads = 0;
-
-    while(NUMTHREADS_WAITING <= NRTHR){
+    while(RUNNING){
         if(!is_empty()){
             nr_reads++;
             open_directory(nr_reads);  
@@ -88,20 +85,15 @@ void * traverse_files(){
             NUMTHREADS_WAITING++;
 
             if(NUMTHREADS_WAITING >= NRTHR){
-   
+                RUNNING = false;
                 pthread_cond_broadcast(&cond);
                 pthread_mutex_unlock( &lock_cond);
-                break;
+                break;  
             }
             pthread_cond_wait(&cond, &lock_cond);
-            NUMTHREADS_WAITING--;
             pthread_mutex_unlock( &lock_cond);
-            
         }
-
-        pthread_cond_broadcast(&cond);
     }
-    
     printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
     return NULL;
 }
@@ -116,7 +108,9 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     }
 
     for(int i = start_index; i < argc-1; i++){
-        enqueue( argv[i]);
+        char * str = concat_path(argv[i],"/");
+        enqueue( str);
+        free(str);
     }
     NAME = argv[argc-1];
 }
@@ -125,14 +119,13 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 
 
 int main(int argc, char *argv[]){
-    pthread_mutex_init(&lock, NULL);
     NUMTHREADS_WAITING = 0;
     int t_flag = 0;
     int p_flag = 0;
     char * type = 0;
     char * cvalue = NULL;
     int c;
-
+    
     while ((c = getopt (argc, argv, "t:p:")) != -1){
         switch (c){
             case 't':
