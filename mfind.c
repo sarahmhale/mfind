@@ -69,7 +69,7 @@ void * traverse_files(){
     int nr_reads = 0;
 
  
-    while(NUMTHREADS_EXECUTING > 1 && !is_empty()){
+    while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
     //    // pthread_mutex_lock( &lock);
     //     if(is_empty() == true){
     //         if(NUMTHREADS_EXECUTING <= 1){
