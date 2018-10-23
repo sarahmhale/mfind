@@ -34,9 +34,9 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-    pthread_mutex_lock(&lock);
+   // pthread_mutex_lock(&lock);
     char * path = dequeue();
-    pthread_mutex_unlock(&lock);
+   // pthread_mutex_unlock(&lock);
 
     p_dir = opendir (path);
 
@@ -68,8 +68,8 @@ void open_directory(int nr_reads){
 void * traverse_files(){
     int nr_reads = 0;
 
-    //NUMTHREADS_EXECUTING > 1 || 
-    while(!is_empty()){
+ 
+    while(NUMTHREADS_EXECUTING > 1 && !is_empty()){
     //    // pthread_mutex_lock( &lock);
     //     if(is_empty() == true){
     //         if(NUMTHREADS_EXECUTING <= 1){
