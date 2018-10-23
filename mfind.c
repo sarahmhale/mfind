@@ -4,7 +4,7 @@ int NUMTHREADS_EXECUTING;
 char * NAME;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 //pthread_mutex_t cond_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+//pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 
 char * concat_path(char * path, char * current_file){
@@ -34,9 +34,9 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-    //pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);
     char * path = dequeue();
-    //pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&lock);
 
     p_dir = opendir (path);
 
@@ -68,23 +68,23 @@ void open_directory(int nr_reads){
 void * traverse_files(){
     int nr_reads = 0;
 
-    
-    while(NUMTHREADS_EXECUTING > 1 || !is_empty()){
-        pthread_mutex_lock( &lock);
-        if(is_empty() == true){
-            if(NUMTHREADS_EXECUTING <= 1){
-                printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
-                return NULL;
-            }
-            printf("waiting: \n");
-            pthread_cond_wait(&cond, &lock);
-        }
+    //NUMTHREADS_EXECUTING > 1 || 
+    while(!is_empty()){
+    //    // pthread_mutex_lock( &lock);
+    //     if(is_empty() == true){
+    //         if(NUMTHREADS_EXECUTING <= 1){
+    //             printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
+    //             return NULL;
+    //         }
+    //         printf("waiting: \n");
+    //         pthread_cond_wait(&cond, &lock);
+    //     }
         nr_reads++;
-        NUMTHREADS_EXECUTING++;
+       // NUMTHREADS_EXECUTING++;
         open_directory(nr_reads);
-        NUMTHREADS_EXECUTING--;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock( &lock);
+       // NUMTHREADS_EXECUTING--;
+       // pthread_cond_signal(&cond);
+       // pthread_mutex_unlock( &lock);
     }
     
     printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
