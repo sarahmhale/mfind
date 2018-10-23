@@ -1,10 +1,12 @@
 #include "mfind.h"
 #include "queue.h"
-int NUMTHREADS_EXECUTING;
-char * NAME;
+static int NUMTHREADS_WAITING;
+static char * NAME;
+static int NRTHR = 0;
+static char * type;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-//pthread_mutex_t cond_mutex = PTHREAD_MUTEX_INITIALIZER;
-//pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 
 char * concat_path(char * path, char * current_file){
@@ -23,8 +25,11 @@ void check_file_type(char * path){
     }else{ 
         if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
             char * str = concat_path(path, "/");
+            pthread_mutex_lock(&lock);
             enqueue(str);
+            pthread_mutex_unlock(&lock);
             free(str);
+            pthread_cond_broadcast(&cond);
         }
     }
     free(path);
@@ -34,57 +39,67 @@ void open_directory(int nr_reads){
     struct dirent *p_dirent;
     DIR *p_dir;
 
-   // pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);
     char * path = dequeue();
-   // pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&lock);
+    if( path != NULL){
+        p_dir = opendir (path);
+        if(p_dir == NULL){
+            perror("");
+        }   
 
-    p_dir = opendir (path);
-
-    if (p_dir == NULL) {
-        printf("could not open dir");   
-    }else{
-        while ((p_dirent = readdir(p_dir)) != NULL) {
-            char * new_path = concat_path(path,p_dirent->d_name);
-            
-            if(!strcmp(p_dirent->d_name, NAME)){
-                printf("%s\n",new_path);
-                free(new_path);
+        if (p_dir == NULL) {
+            printf("could not open dir");   
+        }else{
+            while ((p_dirent = readdir(p_dir)) != NULL) {
+                char * new_path = concat_path(path,p_dirent->d_name);
                 
-            }else{
-                if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
-                    check_file_type(new_path);
-                }else{
+                if(!strcmp(p_dirent->d_name, NAME)){
+                    printf("%s\n",new_path);
                     free(new_path);
+                    
+                }else{
+                    if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
+                        check_file_type(new_path);
+                    }else{
+                        free(new_path);
+                    }
                 }
+            
             }
-          
-        }
-        closedir (p_dir);
-    } 
-    
-    free(path);
+            closedir (p_dir);
+        } 
+
+        pthread_cond_broadcast(&cond);
+        free(path);
+    }
 }
 
 void * traverse_files(){
     int nr_reads = 0;
 
- 
-    while(NUMTHREADS_EXECUTING > 0 && !is_empty()){
-    //    // pthread_mutex_lock( &lock);
-    //     if(is_empty() == true){
-    //         if(NUMTHREADS_EXECUTING <= 1){
-    //             printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
-    //             return NULL;
-    //         }
-    //         printf("waiting: \n");
-    //         pthread_cond_wait(&cond, &lock);
-    //     }
-        nr_reads++;
-       // NUMTHREADS_EXECUTING++;
-        open_directory(nr_reads);
-       // NUMTHREADS_EXECUTING--;
-       // pthread_cond_signal(&cond);
-       // pthread_mutex_unlock( &lock);
+    while(NUMTHREADS_WAITING <= NRTHR){
+        if(!is_empty()){
+            nr_reads++;
+            open_directory(nr_reads);  
+        }
+        else{
+            pthread_mutex_lock( &lock_cond);
+            NUMTHREADS_WAITING++;
+
+            if(NUMTHREADS_WAITING >= NRTHR){
+   
+                pthread_cond_broadcast(&cond);
+                pthread_mutex_unlock( &lock_cond);
+                break;
+            }
+            pthread_cond_wait(&cond, &lock_cond);
+            NUMTHREADS_WAITING--;
+            pthread_mutex_unlock( &lock_cond);
+            
+        }
+
+        pthread_cond_broadcast(&cond);
     }
     
     printf("Threads: %d Reads %d\n",(unsigned int)pthread_self(),nr_reads );
@@ -111,12 +126,10 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 
 int main(int argc, char *argv[]){
     pthread_mutex_init(&lock, NULL);
-    NUMTHREADS_EXECUTING = 1;
-    int nr_of_threads = 2;
+    NUMTHREADS_WAITING = 0;
     int t_flag = 0;
     int p_flag = 0;
     char * type = 0;
-    int nrthr = 0;
     char * cvalue = NULL;
     int c;
 
@@ -128,7 +141,7 @@ int main(int argc, char *argv[]){
                 break;
             case 'p':
                 p_flag = 1;
-                nrthr = atoi(optarg);
+                NRTHR = atoi(optarg);
                 break;
             default:
                
@@ -136,16 +149,18 @@ int main(int argc, char *argv[]){
         }
     }
     read_input_args(argc, argv,t_flag,p_flag);
-    pthread_t threads[nrthr];
-    
-    for(int i = 0; i < nrthr-1; i++){
-        if(pthread_create(&(threads[i]), NULL, &traverse_files, NULL)!= 0){
+
+    pthread_t threads[NRTHR];
+    for(int i = 0; i < NRTHR-1; i++){
+        if(pthread_create(&(threads[i]), NULL, traverse_files, NULL) != 0){
             perror("");
         }
     }
+
     traverse_files();
 
-    for(int i = 0; i < nrthr-1; i++){
+    for(int i = 0; i < NRTHR-1; i++){
         pthread_join(threads[i],NULL);
     }
 }
+

@@ -1,8 +1,8 @@
 
 CXX=gcc
-CFLAGS = -std=gnu11 -g -Wall -Wextra -Wmissing-declarations -Wmissing-prototypes -Werror-implicit-function-declaration -Wreturn-type -Wparentheses -Wunused -Wold-style-definition -Wundef -Wshadow -Wstrict-prototypes -Wswitch-default -Wunreachable-code -lpthread
+CFLAGS = -std=gnu11 -Wall -Wextra -Wmissing-declarations -Wmissing-prototypes -Werror-implicit-function-declaration -Wreturn-type -Wparentheses -Wunused -Wold-style-definition -Wundef -Wshadow -Wstrict-prototypes -Wswitch-default -Wunreachable-code -lpthread
 
-all: clean mfind
+all: mfind
 
 mfind: mfind.o queue.o
 	${CXX} ${CFLAGS} mfind.o queue.o -o mfind
