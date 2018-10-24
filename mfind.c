@@ -1,10 +1,11 @@
 #include "mfind.h"
-#include "queue.h"
+
 static int NUMTHREADS_WAITING;
 static char * NAME;
 static int NRTHR = 0;
-static char * type;
+static char * TYPE;
 static bool RUNNING = true;
+
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -17,24 +18,48 @@ char * concat_path(char * path, char * current_file){
     return str3;
 }
 
-void check_file_type(char * path){
-    struct stat file_info;
+void add_to_queue(char * path){
+    char * str = concat_path(path, "/");
+    pthread_mutex_lock(&lock);
+    enqueue(str);
+    pthread_cond_broadcast(&cond);
+    pthread_mutex_unlock(&lock);
+    free(str); 
+}
 
+char * check_file_type(char * path){
+    struct stat file_info;
     if(lstat(path, &file_info)==-1){
         fprintf(stderr,"no such %s : ", path);
         perror("");
-    }else{ 
-        if(S_ISDIR(file_info.st_mode) && !S_ISLNK(file_info.st_mode)){
-            char * str = concat_path(path, "/");
-            pthread_mutex_lock(&lock);
-            enqueue(str);
-            pthread_mutex_unlock(&lock);
-            free(str); 
+    }else{
+        switch (file_info.st_mode & S_IFMT) {
+            case S_IFREG:  
+                return("f");
+            case S_IFDIR:
+                return("d");
+            case S_IFLNK: 
+                return("l");
         }
     }
-    free(path);
 }
 
+bool is_match(char * current_name,char * path){
+    if(!strcmp(current_name, NAME)){
+        if(TYPE != 0){
+            if(!strcmp(TYPE, check_file_type(path))){
+                printf("%s\n",path);
+                free(path);
+                return true;   
+            }
+        }else{
+            printf("%s\n",path);
+            free(path);
+            return true;  
+        }
+    }
+    return false;
+}
 
 void open_directory(int nr_reads){
     struct dirent *p_dirent;
@@ -47,24 +72,18 @@ void open_directory(int nr_reads){
     if(path != NULL){
         p_dir = opendir (path);
         if(p_dir == NULL){
-            perror("path: ");
-        }   
-        if (p_dir == NULL) {
-            printf("could not open dir");   
+            fprintf(stderr, "%s :", path);
+            perror("");
         }else{
             while ((p_dirent = readdir(p_dir)) != NULL) {
                 char * new_path = concat_path(path,p_dirent->d_name);
-                
-                if(!strcmp(p_dirent->d_name, NAME)){
-                    printf("%s\n",new_path);
-                    free(new_path);
-                    
-                }else{
+                if(!is_match(p_dirent->d_name, new_path)){
                     if(strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, "..")){
-                        check_file_type(new_path);
-                    }else{
-                        free(new_path);
+                        if(!strcmp(check_file_type(new_path),"d")){
+                            add_to_queue(new_path);
+                        }
                     }
+                    free(new_path); 
                 }
             }
             closedir (p_dir);
@@ -90,7 +109,9 @@ void * traverse_files(){
                 pthread_mutex_unlock( &lock_cond);
                 break;  
             }
+
             pthread_cond_wait(&cond, &lock_cond);
+            NUMTHREADS_WAITING--;
             pthread_mutex_unlock( &lock_cond);
         }
     }
@@ -99,15 +120,12 @@ void * traverse_files(){
 }
 
 bool is_last_character_backslash(char * str){
-
     if(str[strlen(str) - 1] != '/'){
         return false;
     }else{
         return true;
     }
-    
 }
-
 
 void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     int start_index = 1;
@@ -119,16 +137,12 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
 
     for(int i = start_index; i < argc-1; i++){
         if(is_last_character_backslash(argv[i])){
-            enqueue( argv[i]);
+           enqueue( argv[i]);
         }else{
             char * str = concat_path(argv[i],"/");
             enqueue(str);
             free(str);
-        }
-       
-
-       
-        
+        }   
     }
     NAME = argv[argc-1];
 }
@@ -137,7 +151,6 @@ int main(int argc, char *argv[]){
     NUMTHREADS_WAITING = 0;
     int t_flag = 0;
     int p_flag = 0;
-    char * type = 0;
     char * cvalue = NULL;
     int c;
     
@@ -145,14 +158,13 @@ int main(int argc, char *argv[]){
         switch (c){
             case 't':
                 t_flag = 1;
-                type = optarg;
+                TYPE = optarg;
                 break;
             case 'p':
                 p_flag = 1;
                 NRTHR = atoi(optarg);
                 break;
             default:
-               
                 break;
         }
     }
