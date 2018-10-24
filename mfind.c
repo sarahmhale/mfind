@@ -98,6 +98,16 @@ void * traverse_files(){
     return NULL;
 }
 
+bool is_last_character_backslash(char * str){
+
+    if(str[strlen(str) - 1] != '/'){
+        return false;
+    }else{
+        return true;
+    }
+    
+}
+
 
 void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     int start_index = 1;
@@ -108,15 +118,20 @@ void read_input_args(int argc , char **argv,int t_flag, int p_flag){
     }
 
     for(int i = start_index; i < argc-1; i++){
-        char * str = concat_path(argv[i],"/");
-        enqueue( str);
-        free(str);
+        if(is_last_character_backslash(argv[i])){
+            enqueue( argv[i]);
+        }else{
+            char * str = concat_path(argv[i],"/");
+            enqueue(str);
+            free(str);
+        }
+       
+
+       
+        
     }
     NAME = argv[argc-1];
 }
-
-
-
 
 int main(int argc, char *argv[]){
     NUMTHREADS_WAITING = 0;
