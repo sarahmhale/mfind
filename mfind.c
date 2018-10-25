@@ -61,14 +61,12 @@ bool is_match(char *current_name, char *path)
             if (!strcmp(TYPE, check_file_type(path)))
             {
                 printf("%s\n", path);
-                free(path);
                 return true;
             }
         }
         else
         {
             printf("%s\n", path);
-            free(path);
             return true;
         }
     }
@@ -106,8 +104,9 @@ void open_directory(int nr_reads)
                             add_to_queue(new_path);
                         }
                     }
-                    free(new_path);
+
                 }
+                free(new_path);
             }
             closedir(p_dir);
         }
@@ -186,40 +185,24 @@ void read_input_args(int argc, char **argv, int t_flag, int p_flag)
     }
     NAME = argv[argc - 1];
 }
-// int read_flags(int argc, char *argv[])
-// {
-//     int p_flag = 0;
-//     int c;
-//     while ((c = getopt(argc, argv, "t:p:")) != -1)
-//     {
-//         switch (c)
-//         {
-//         case 't':
-//             TYPE = optarg;
-//             if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
-//             {
-//                 fprintf(stderr, "Type for -t is wrong\n");
-//                 return NULL;
-//             }
-//             return 1;
-//         case 'p':
-//             p_flag = 1;
-//             for (int i = 0; i < strlen(optarg); i++)
-//             {
-//                 if (!isdigit(optarg[i]))
-//                 {
-//                     fprintf(stderr, "-p is not followed by a number.\n");
-//                     return NULL;
-//                 }
-//             }
-//             NRTHR = atoi(optarg);
-//             return 1;
-//         default:
-//             fprintf(stderr, "Invalid flag\n");
-//             return NULL;
-//         }
-//     }
-// }
+
+void start_path()
+{
+    pthread_mutex_lock(&lock_cond);
+    char * path = dequeue();
+    pthread_mutex_unlock(&lock_cond);
+
+    if(strstr(path, NAME)!= NULL)
+    {
+        is_match(NAME, path);
+    }
+
+    pthread_mutex_lock(&lock_cond);
+    enqueue(path);
+    pthread_mutex_unlock(&lock_cond);
+    free(path);
+}
+
 int main(int argc, char *argv[])
 {
     NUMTHREADS_WAITING = 0;
@@ -268,7 +251,7 @@ int main(int argc, char *argv[])
         }
     }
     read_input_args(argc, argv, t_flag, p_flag);
-
+    start_path();
     pthread_t threads[NRTHR];
     for (int i = 0; i < NRTHR - 1; i++)
     {
