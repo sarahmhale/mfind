@@ -191,14 +191,14 @@ bool is_last_character_backslash(char *str)
 
 /* Read input arguments and adds to queue.
  */
-void read_input_args(int argc, char **argv, int t_flag, int p_flag)
+void read_input_args(int argc, char **argv)
 {
     int start_index = 1;
     if (TYPE != 0 && NRTHR != 0)
     {
         start_index = 5;
     }
-    else if ((TYPE != 0 && NRTHR == 0) || (t_flag == 0 && NRTHR != 0))
+    else if ((TYPE != 0 && NRTHR == 0) || (TYPE == 0 && NRTHR != 0))
     {
         start_index = 3;
     }
@@ -276,7 +276,7 @@ int read_flags(int argc, char **argv){
                 fprintf(stderr, "Type for -t is wrong\n");
                 return 1;
             }
-            return 0;
+            break;
         case 'p':
             for (int i = 0; i < strlen(optarg); i++)
             {
@@ -287,7 +287,7 @@ int read_flags(int argc, char **argv){
                 }
             }
             NRTHR = atoi(optarg);
-            return 0;
+            break;
         default:
             fprintf(stderr, "Invalid flag\n");
             return 1;
@@ -299,8 +299,6 @@ int read_flags(int argc, char **argv){
 int main(int argc, char *argv[])
 {
     NUMTHREADS_WAITING = 0;
-    int t_flag = 0;
-    int p_flag = 0;
     int c;
 
     if (argc < 3)
@@ -312,7 +310,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    read_input_args(argc, argv, t_flag, p_flag);
+    read_input_args(argc, argv);
     start_path();
     run_threads();  
 }
