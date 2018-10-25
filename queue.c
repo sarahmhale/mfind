@@ -1,14 +1,17 @@
 #include "queue.h"
 
-/* this implematation is taken from
+/* this implematation is inspired by
  * http://www.cprogrammingnotes.com/question/dynamic-queue.html,
- * small edits made by me.
+ * I have edited it so that it fits my needs.
  */
 struct node *front;
 struct node *rear;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-
+/* Adds a node to the end of the list and
+ * sets the data of the node to the inparameter of the 
+ * function. Returns the node.
+ */
 node * enqueue(char * item)
 {   
     struct node *nptr = malloc(sizeof(node));
@@ -32,6 +35,9 @@ node * enqueue(char * item)
     return front;
 }
 
+/* Checks if the queue is empty and returns 
+ * a boolean.
+ */
 bool is_empty(){
     pthread_mutex_lock(&lock);
     if( front == NULL){
@@ -43,21 +49,11 @@ bool is_empty(){
     
 }
 
-void display()
-{
-    struct node *temp;
-    temp = front;
-    printf("\n");
-    while (temp != NULL)
-    {
-        printf("%s\t", temp->data);
-        temp = temp->next;
-    }
-}
-
+/* Removes the first element in the queue and
+ * return the data that the node contains.
+ */
 char * dequeue()
 {
-   
     if (front == NULL)
     {
         return NULL;

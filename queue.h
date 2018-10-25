@@ -5,9 +5,9 @@
 #include <pthread.h>
 
 
-/* this implematation is taken from
+/* this implematation is inspired by
  * http://www.cprogrammingnotes.com/question/dynamic-queue.html,
- * small edits made by me.
+ * I have edited it so that it fits my needs.
  */
 
 typedef struct node
@@ -16,7 +16,6 @@ typedef struct node
     struct node *next;
 }node;
 
-void display();
 node * enqueue(char *);
 char * dequeue();
 bool is_empty();

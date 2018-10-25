@@ -9,6 +9,10 @@ static bool RUNNING = true;
 static pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
+/* Concat two strings and allocated memory.
+ * Parameters: Two char * to be concated
+ * Returns:  the concated string.
+ */
 char *concat_path(char *path, char *current_file)
 {
     char *str3 = (char *)malloc(1 + strlen(path) + strlen(current_file));
@@ -17,6 +21,8 @@ char *concat_path(char *path, char *current_file)
     return str3;
 }
 
+/* Add a path to the queue. 
+ */
 void add_to_queue(char *path)
 {
     char *str = concat_path(path, "/");
@@ -27,6 +33,11 @@ void add_to_queue(char *path)
     free(str);
 }
 
+/* Checks which type the file is.
+ * Return: "f" if file
+ *         "d" if directory
+ *         "l" if link
+ */
 char *check_file_type(char *path)
 {
     struct stat file_info;
@@ -52,6 +63,10 @@ char *check_file_type(char *path)
     }
 }
 
+/* Checks if the file is a match to the file searched for
+ * Return: True if a match
+ *         False if not a match
+ */
 bool is_match(char *current_name, char *path)
 {
     if (!strcmp(current_name, NAME))
@@ -73,9 +88,34 @@ bool is_match(char *current_name, char *path)
     return false;
 }
 
+/* Loops through all files in directory.
+ * Checks if match
+ * if a file is a directory it will be added to queue.    
+ */
+void read_dir(DIR *p_dir, char * path){
+       struct dirent *p_dirent;
+    while ((p_dirent = readdir(p_dir)) != NULL)
+    {
+        char *new_path = concat_path(path, p_dirent->d_name);
+        is_match(p_dirent->d_name, new_path);        
+        if (strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, ".."))
+        {
+            if (!strcmp(check_file_type(new_path), "d"))
+            {
+                add_to_queue(new_path);
+            }
+        }        
+        free(new_path);
+    }
+
+}
+
+/* Takes the first element of the queue and opens the directory
+ * Then uses read_dir.
+ */
 void open_directory(int nr_reads)
 {
-    struct dirent *p_dirent;
+ 
     DIR *p_dir;
 
     pthread_mutex_lock(&lock_cond);
@@ -92,26 +132,15 @@ void open_directory(int nr_reads)
         }
         else
         {
-            while ((p_dirent = readdir(p_dir)) != NULL)
-            {
-                char *new_path = concat_path(path, p_dirent->d_name);
-                is_match(p_dirent->d_name, new_path);
-                
-                if (strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, ".."))
-                {
-                    if (!strcmp(check_file_type(new_path), "d"))
-                    {
-                        add_to_queue(new_path);
-                    }
-                }        
-                free(new_path);
-            }
-            closedir(p_dir);
+            read_dir(p_dir, path);
         }
+        closedir(p_dir);
         free(path);
     }
 }
 
+/* Controls if the threads should open a directory or wait.
+ */
 void *traverse_files()
 {
     int nr_reads = 0;
@@ -144,6 +173,10 @@ void *traverse_files()
     return NULL;
 }
 
+/* Check if last character is /
+ * Return: True if the last character is /
+ *         False if the last character is not /
+ */
 bool is_last_character_backslash(char *str)
 {
     if (str[strlen(str) - 1] != '/')
@@ -156,14 +189,16 @@ bool is_last_character_backslash(char *str)
     }
 }
 
+/* Read input arguments and adds to queue.
+ */
 void read_input_args(int argc, char **argv, int t_flag, int p_flag)
 {
     int start_index = 1;
-    if (TYPE != 0 && p_flag == 1)
+    if (TYPE != 0 && NRTHR != 0)
     {
         start_index = 5;
     }
-    else if ((TYPE != 0 && p_flag == 0) || (t_flag == 0 && p_flag == 1))
+    else if ((TYPE != 0 && NRTHR == 0) || (t_flag == 0 && NRTHR != 0))
     {
         start_index = 3;
     }
@@ -184,6 +219,8 @@ void read_input_args(int argc, char **argv, int t_flag, int p_flag)
     NAME = argv[argc - 1];
 }
 
+/* Check if start path is match 
+ */
 void start_path()
 {
     pthread_mutex_lock(&lock_cond);
@@ -201,55 +238,10 @@ void start_path()
     free(path);
 }
 
-int main(int argc, char *argv[])
-{
-    NUMTHREADS_WAITING = 0;
-    int t_flag = 0;
-    int p_flag = 0;
-    int c;
-
-    if (argc < 3)
-    {
-        fprintf(stderr, "To few arguments\n");
-        return 1;
-    }
-    // if (read_flags(argc, argv) == NULL)
-    // {
-    //     fprintf(stderr, "Wrong flags\n");
-    //     return 1;
-    // }
-
-    while ((c = getopt(argc, argv, "t:p:")) != -1)
-    {
-        switch (c)
-        {
-        case 't':
-            TYPE = optarg;
-            if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
-            {
-                fprintf(stderr, "Type for -t is wrong\n");
-                return 1;
-            }
-            break;
-        case 'p':
-            p_flag = 1;
-            for (int i = 0; i < strlen(optarg); i++)
-            {
-                if (!isdigit(optarg[i]))
-                {
-                    fprintf(stderr, "-p is not followed by a number.\n");
-                    return 1;
-                }
-            }
-            NRTHR = atoi(optarg);
-            break;
-        default:
-            fprintf(stderr, "Invalid flag\n");
-            return 1;
-        }
-    }
-    read_input_args(argc, argv, t_flag, p_flag);
-    start_path();
+/* Creates threads, runs traverese files and wait for the threads to
+ * be done.
+ */ 
+void run_threads(){
     pthread_t threads[NRTHR];
     for (int i = 0; i < NRTHR - 1; i++)
     {
@@ -266,3 +258,63 @@ int main(int argc, char *argv[])
         pthread_join(threads[i], NULL);
     }
 }
+
+/* Reads the flags and checks so that arguments are right
+ * Return: 1 if something is wrong
+ *         0 if everyting is right
+ */ 
+int read_flags(int argc, char **argv){
+    int c;
+    while ((c = getopt(argc, argv, "t:p:")) != -1)
+    {
+        switch (c)
+        {
+        case 't':
+            TYPE = optarg;
+            if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
+            {
+                fprintf(stderr, "Type for -t is wrong\n");
+                return 1;
+            }
+            return 0;
+        case 'p':
+            for (int i = 0; i < strlen(optarg); i++)
+            {
+                if (!isdigit(optarg[i]))
+                {
+                    fprintf(stderr, "-p is not followed by a number.\n");
+                    return 1;
+                }
+            }
+            NRTHR = atoi(optarg);
+            return 0;
+        default:
+            fprintf(stderr, "Invalid flag\n");
+            return 1;
+        }
+    }
+}
+
+
+int main(int argc, char *argv[])
+{
+    NUMTHREADS_WAITING = 0;
+    int t_flag = 0;
+    int p_flag = 0;
+    int c;
+
+    if (argc < 3)
+    {
+        fprintf(stderr, "To few arguments\n");
+        return 1;
+    }
+    if(read_flags(argc, argv) == 1){
+        return 1;
+    }
+
+    read_input_args(argc, argv, t_flag, p_flag);
+    start_path();
+    run_threads();  
+}
+
+
