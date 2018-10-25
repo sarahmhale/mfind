@@ -95,17 +95,15 @@ void open_directory(int nr_reads)
             while ((p_dirent = readdir(p_dir)) != NULL)
             {
                 char *new_path = concat_path(path, p_dirent->d_name);
-                if (!is_match(p_dirent->d_name, new_path))
+                is_match(p_dirent->d_name, new_path);
+                
+                if (strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, ".."))
                 {
-                    if (strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, ".."))
+                    if (!strcmp(check_file_type(new_path), "d"))
                     {
-                        if (!strcmp(check_file_type(new_path), "d"))
-                        {
-                            add_to_queue(new_path);
-                        }
+                        add_to_queue(new_path);
                     }
-
-                }
+                }        
                 free(new_path);
             }
             closedir(p_dir);
