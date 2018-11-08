@@ -5,7 +5,6 @@ static char *NAME;
 static int NRTHR = 0;
 static char *TYPE;
 static bool RUNNING = true;
-
 static pthread_mutex_t lock_cond = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
@@ -127,7 +126,7 @@ void open_directory(int nr_reads)
         if (p_dir == NULL)
         {
             fprintf(stderr, "%s : ", path);
-            perror("");
+            perror("opendir error: ");
         }
         else
         {
@@ -188,36 +187,6 @@ bool is_last_character_backslash(char *str)
     }
 }
 
-/* Read input arguments and adds to queue.
- */
-void read_input_args(int argc, char **argv)
-{
-    int start_index = 1;
-    if (TYPE != 0 && NRTHR != 0)
-    {
-        start_index = 5;
-    }
-    else if ((TYPE != 0 && NRTHR == 0) || (TYPE == 0 && NRTHR != 0))
-    {
-        start_index = 3;
-    }
-
-    for (int i = start_index; i < argc - 1; i++)
-    {
-        if (is_last_character_backslash(argv[i]))
-        {
-            enqueue(argv[i]);
-        }
-        else
-        {
-            char *str = concat_path(argv[i], "/");
-            enqueue(str);
-            free(str);
-        }
-    }
-    NAME = argv[argc - 1];
-}
-
 /* Check if start path is match 
  */
 void start_path()
@@ -262,13 +231,30 @@ void run_threads()
     }
 }
 
+/* enqueues input arguments that are not flags and sets the name of the 
+ * goal.
+ */
+void enqueue_input_files(char **argv, int optind, int argc)
+{
+    char **arguments = argv + optind;
+
+    for (int i = 0; i < (argc - optind - 1); i++)
+    {
+        char *str = concat_path(arguments[i], "/");
+        enqueue(str);
+        free(str);
+    }
+    NAME = arguments[(argc - optind - 1)];
+}
+
 /* Reads the flags and checks so that arguments are right
  * Return: 1 if something is wrong
  *         0 if everyting is right
  */
-int read_flags(int argc, char **argv)
+int read_input(int argc, char **argv)
 {
     int c;
+
     while ((c = getopt(argc, argv, "t:p:")) != -1)
     {
         switch (c)
@@ -293,10 +279,12 @@ int read_flags(int argc, char **argv)
             NRTHR = atoi(optarg);
             break;
         default:
+
             fprintf(stderr, "Invalid flag\n");
             return 1;
         }
     }
+    enqueue_input_files(argv, optind, argc);
     return 0;
 }
 
@@ -310,12 +298,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "To few arguments\n");
         return 1;
     }
-    if (read_flags(argc, argv) == 1)
+    if (read_input(argc, argv) == 1)
     {
         return 1;
     }
 
-    read_input_args(argc, argv);
     start_path();
     run_threads();
 }
