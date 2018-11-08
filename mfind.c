@@ -43,8 +43,7 @@ char *check_file_type(char *path)
     struct stat file_info;
     if (lstat(path, &file_info) == -1)
     {
-        fprintf(stderr, "no such %s : ", path);
-        perror("");
+        fprintf(stderr, "no such %s: \n", path);
         return NULL;
     }
     else
@@ -92,22 +91,22 @@ bool is_match(char *current_name, char *path)
  * Checks if match
  * if a file is a directory it will be added to queue.    
  */
-void read_dir(DIR *p_dir, char * path){
-       struct dirent *p_dirent;
+void read_dir(DIR *p_dir, char *path)
+{
+    struct dirent *p_dirent;
     while ((p_dirent = readdir(p_dir)) != NULL)
     {
         char *new_path = concat_path(path, p_dirent->d_name);
-        is_match(p_dirent->d_name, new_path);        
+        is_match(p_dirent->d_name, new_path);
         if (strcmp(p_dirent->d_name, ".") && strcmp(p_dirent->d_name, ".."))
         {
             if (!strcmp(check_file_type(new_path), "d"))
             {
                 add_to_queue(new_path);
             }
-        }        
+        }
         free(new_path);
     }
-
 }
 
 /* Takes the first element of the queue and opens the directory
@@ -115,7 +114,7 @@ void read_dir(DIR *p_dir, char * path){
  */
 void open_directory(int nr_reads)
 {
- 
+
     DIR *p_dir;
 
     pthread_mutex_lock(&lock_cond);
@@ -127,7 +126,7 @@ void open_directory(int nr_reads)
         p_dir = opendir(path);
         if (p_dir == NULL)
         {
-            fprintf(stderr, "%s :", path);
+            fprintf(stderr, "%s : ", path);
             perror("");
         }
         else
@@ -224,10 +223,10 @@ void read_input_args(int argc, char **argv)
 void start_path()
 {
     pthread_mutex_lock(&lock_cond);
-    char * path = dequeue();
+    char *path = dequeue();
     pthread_mutex_unlock(&lock_cond);
 
-    if(strstr(path, NAME)!= NULL)
+    if (strstr(path, NAME) != NULL)
     {
         is_match(NAME, path);
     }
@@ -240,14 +239,15 @@ void start_path()
 
 /* Creates threads, runs traverese files and wait for the threads to
  * be done.
- */ 
-void run_threads(){
+ */
+void run_threads()
+{
     pthread_t threads[NRTHR];
     for (int i = 0; i < NRTHR - 1; i++)
     {
         if (pthread_create(&(threads[i]), NULL, traverse_files, NULL) != 0)
         {
-            perror("");
+            perror("pthread_create error: ");
         }
     }
 
@@ -255,15 +255,19 @@ void run_threads(){
 
     for (int i = 0; i < NRTHR - 1; i++)
     {
-        pthread_join(threads[i], NULL);
+        if (pthread_join(threads[i], NULL) != 0)
+        {
+            perror("pthread_join error: ");
+        }
     }
 }
 
 /* Reads the flags and checks so that arguments are right
  * Return: 1 if something is wrong
  *         0 if everyting is right
- */ 
-int read_flags(int argc, char **argv){
+ */
+int read_flags(int argc, char **argv)
+{
     int c;
     while ((c = getopt(argc, argv, "t:p:")) != -1)
     {
@@ -293,8 +297,8 @@ int read_flags(int argc, char **argv){
             return 1;
         }
     }
+    return 1;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -306,13 +310,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, "To few arguments\n");
         return 1;
     }
-    if(read_flags(argc, argv) == 1){
+    if (read_flags(argc, argv) == 1)
+    {
         return 1;
     }
 
     read_input_args(argc, argv);
     start_path();
-    run_threads();  
+    run_threads();
 }
-
-
