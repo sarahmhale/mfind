@@ -249,12 +249,13 @@ void enqueue_input_files(char **argv, int optind, int argc)
 
 bool type(char *optarg)
 {
-    TYPE = optarg;
-    if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
+
+    if (strcmp(optarg, "d") && strcmp(optarg, "f") && strcmp(optarg, "l"))
     {
         fprintf(stderr, "Type for -t is wrong\n");
         return false;
     }
+    TYPE = optarg;
     return true;
 }
 
@@ -281,9 +282,17 @@ bool flags(int argc, char **argv)
         switch (c)
         {
         case 't':
-            return type(optarg);
+            if (type(optarg))
+            {
+                break;
+            }
+            return false;
         case 'p':
-            return p_threads(optarg);
+            if (p_threads(optarg))
+            {
+                break;
+            }
+            return false;
         default:
             fprintf(stderr, "Invalid flag\n");
             return false;
