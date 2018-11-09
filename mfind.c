@@ -247,11 +247,32 @@ void enqueue_input_files(char **argv, int optind, int argc)
     NAME = arguments[(argc - optind - 1)];
 }
 
-/* Reads the flags and checks so that arguments are right
- * Return: 1 if something is wrong
- *         0 if everyting is right
- */
-int read_input(int argc, char **argv)
+bool type(char *optarg)
+{
+    TYPE = optarg;
+    if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
+    {
+        fprintf(stderr, "Type for -t is wrong\n");
+        return false;
+    }
+    return true;
+}
+
+bool p_threads(char *optarg)
+{
+    for (int i = 0; i < strlen(optarg); i++)
+    {
+        if (!isdigit(optarg[i]))
+        {
+            fprintf(stderr, "-p is not followed by a number.\n");
+            return false;
+        }
+    }
+    NRTHR = atoi(optarg);
+    return true;
+}
+
+bool flags(int argc, char **argv)
 {
     int c;
 
@@ -260,32 +281,31 @@ int read_input(int argc, char **argv)
         switch (c)
         {
         case 't':
-            TYPE = optarg;
-            if (strcmp(TYPE, "d") && strcmp(TYPE, "f") && strcmp(TYPE, "l"))
-            {
-                fprintf(stderr, "Type for -t is wrong\n");
-                return 1;
-            }
-            break;
+            return type(optarg);
         case 'p':
-            for (int i = 0; i < strlen(optarg); i++)
-            {
-                if (!isdigit(optarg[i]))
-                {
-                    fprintf(stderr, "-p is not followed by a number.\n");
-                    return 1;
-                }
-            }
-            NRTHR = atoi(optarg);
-            break;
+            return p_threads(optarg);
         default:
-
             fprintf(stderr, "Invalid flag\n");
-            return 1;
+            return false;
         }
     }
-    enqueue_input_files(argv, optind, argc);
-    return 0;
+    return true;
+}
+
+/* Reads the flags and checks so that arguments are right
+ * Return: 1 if something is wrong
+ *         0 if everyting is right
+ */
+bool read_input(int argc, char **argv)
+{
+
+    if (flags(argc, argv))
+    {
+        enqueue_input_files(argv, optind, argc);
+        return true;
+    }
+
+    return false;
 }
 
 int main(int argc, char *argv[])
@@ -298,7 +318,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "To few arguments\n");
         return 1;
     }
-    if (read_input(argc, argv) == 1)
+    if (read_input(argc, argv) == false)
     {
         return 1;
     }
